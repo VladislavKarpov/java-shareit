@@ -1,25 +1,22 @@
-package ru.practicum.shareit.user.controllers;
+package ru.practicum.shareit.user.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
-import ru.practicum.shareit.user.service.UserServiceImpl;
 
 
 import java.util.List;
 
-@RestController
-@RequestMapping(path = "/users")
 @Validated
+@RestController
+@RequiredArgsConstructor
+@RequestMapping(path = "/users")
 public class UserController {
     private final UserService service;
-
-    public UserController(UserServiceImpl service) {
-        this.service = service;
-    }
 
     @PostMapping
     public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto userDto) {

@@ -1,6 +1,7 @@
-package ru.practicum.shareit.user;
+package ru.practicum.shareit.user.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +33,9 @@ public class InMemoryUserRepository {
     }
 
     public Optional<User> findByEmail(String email) {
-        return storage.values().stream().filter(checkUser -> checkUser.getEmail().equalsIgnoreCase(email)).findFirst();
+        return storage.values()
+                .stream()
+                .filter(checkUser -> checkUser.getEmail()
+                        .equalsIgnoreCase(email)).findFirst();
     }
 }
