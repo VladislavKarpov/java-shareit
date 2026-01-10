@@ -29,4 +29,5 @@ public class ItemDto {
     private Long requestId;
 
     private Long ownerId;
+
 }

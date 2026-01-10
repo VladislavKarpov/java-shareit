@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
 
@@ -25,6 +25,14 @@ public class ItemController {
         return ResponseEntity.ok(service.create(userId, itemDto));
     }
 
+    @PostMapping("/{itemId}/comment")
+    public ResponseEntity<CommentDto> addComment(@RequestHeader(HEADER_USER) Long userId,
+                                                 @PathVariable Long itemId,
+                                                 @Valid @RequestBody CommentCreateDto dto) {
+        return ResponseEntity.ok(service.addComment(userId, itemId, dto));
+    }
+
+
     @PatchMapping("/{itemId}")
     public ResponseEntity<ItemDto> update(
             @RequestHeader(HEADER_USER) Long userId,
@@ -35,13 +43,13 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<ItemDto> getById(@RequestHeader(HEADER_USER) Long userId,
-                                           @PathVariable Long itemId) {
+    public ResponseEntity<ItemDetailsDto> getById(@RequestHeader(HEADER_USER) Long userId,
+                                                  @PathVariable Long itemId) {
         return ResponseEntity.ok(service.getById(userId, itemId));
     }
 
     @GetMapping
-    public ResponseEntity<List<ItemDto>> getOwnerItems(@RequestHeader(HEADER_USER) Long userId) {
+    public ResponseEntity<List<ItemOwnerDto>> getOwnerItems(@RequestHeader(HEADER_USER) Long userId) {
         return ResponseEntity.ok(service.getOwnerItems(userId));
     }
 
@@ -49,4 +57,6 @@ public class ItemController {
     public ResponseEntity<List<ItemDto>> search(@RequestParam String text) {
         return ResponseEntity.ok(service.search(text));
     }
+
+
 }
