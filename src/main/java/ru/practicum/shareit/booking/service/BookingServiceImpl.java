@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,20 +20,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
-
-    public BookingServiceImpl(BookingRepository bookingRepository,
-                              UserRepository userRepository,
-                              ItemRepository itemRepository) {
-        this.bookingRepository = bookingRepository;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
-    }
 
     @Override
     @Transactional
@@ -49,20 +43,23 @@ public class BookingServiceImpl implements BookingService {
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Owner cannot book own item");
         }
-
-        if (dto.getStart() == null || dto.getEnd() == null || !dto.getEnd().isAfter(dto.getStart())) {
-            throw new ValidationException("Invalid booking time");
+        if (!dto.getEnd().isAfter(dto.getStart())) {
+            throw new ValidationException("Invalid booking time: end must be after start");
         }
 
-        Booking booking = Booking.builder()
-                .start(dto.getStart())
-                .end(dto.getEnd())
-                .item(item)
-                .booker(booker)
-                .status(Booking.BookingStatus.WAITING)
-                .build();
+        boolean overlap = bookingRepository.existsOverlap(
+                item.getId(),
+                Booking.BookingStatus.APPROVED,
+                dto.getStart(),
+                dto.getEnd()
+        );
+        if (overlap) {
+            throw new ValidationException("Booking time overlaps with existing approved booking");
+        }
 
+        Booking booking = BookingMapper.fromCreateDto(dto, item, booker);
         booking = bookingRepository.save(booking);
+
         return BookingMapper.toDto(booking);
     }
 
@@ -79,8 +76,14 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Booking status already decided");
         }
 
+        // по замечанию ревью: нельзя подтверждать уже начавшееся
+        if (!booking.getStart().isAfter(LocalDateTime.now())) {
+            throw new ValidationException("Cannot approve/reject booking that already started");
+        }
+
         booking.setStatus(approved ? Booking.BookingStatus.APPROVED : Booking.BookingStatus.REJECTED);
         booking = bookingRepository.save(booking);
+
         return BookingMapper.toDto(booking);
     }
 
@@ -136,6 +139,7 @@ public class BookingServiceImpl implements BookingService {
                     bookingRepository.findByItem_Owner_IdAndStatus(ownerId, Booking.BookingStatus.WAITING, sort);
             case REJECTED ->
                     bookingRepository.findByItem_Owner_IdAndStatus(ownerId, Booking.BookingStatus.REJECTED, sort);
+            default -> List.of();
         };
 
         return bookings.stream().map(BookingMapper::toDto).toList();

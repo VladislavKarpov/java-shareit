@@ -2,9 +2,12 @@ package ru.practicum.shareit.booking.repository;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.booking.model.Booking;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -35,4 +38,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     boolean existsByBooker_IdAndItem_IdAndEndIsBeforeAndStatus(
             Long bookerId, Long itemId, LocalDateTime time, Booking.BookingStatus status);
+
+    List<Booking> findByItem_IdInAndStatus(Collection<Long> itemIds, Booking.BookingStatus status);
+
+    @Query("""
+            select count(b) > 0
+            from Booking b
+            where b.item.id = :itemId
+              and b.status = :status
+              and b.start < :end
+              and b.end > :start
+            """)
+    boolean existsOverlap(@Param("itemId") Long itemId,
+                          @Param("status") Booking.BookingStatus status,
+                          @Param("start") LocalDateTime start,
+                          @Param("end") LocalDateTime end);
 }

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,51 +10,46 @@ import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
+
+    private static final Sort COMMENTS_SORT = Sort.by(Sort.Direction.DESC, "created");
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
 
-    public ItemServiceImpl(ItemRepository itemRepository,
-                           UserRepository userRepository,
-                           BookingRepository bookingRepository,
-                           CommentRepository commentRepository) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.bookingRepository = bookingRepository;
-        this.commentRepository = commentRepository;
-    }
-
     @Override
     @Transactional
     public ItemDto create(Long userId, ItemDto itemDto) {
-        var user = userRepository.findById(userId)
+        var owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
-        Item item = ItemMapper.toItem(itemDto, user);
+        var item = ItemMapper.toItem(itemDto, owner);
         item = itemRepository.save(item);
+
         return ItemMapper.toItemDto(item);
     }
 
     @Override
     @Transactional
     public ItemDto update(Long userId, Long itemId, ItemDto update) {
-        Item item = itemRepository.findById(itemId)
+        var item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found: " + itemId));
 
         if (!item.getOwner().getId().equals(userId)) {
@@ -70,22 +66,24 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDetailsDto getById(Long userId, Long itemId) {
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
-        Item item = itemRepository.findById(itemId)
+        var item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found: " + itemId));
 
-        ItemDetailsDto dto = ItemDetailsDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.getAvailable())
-                .comments(getComments(itemId))
-                .build();
+        var comments = commentRepository.findByItem_Id(itemId, COMMENTS_SORT)
+                .stream()
+                .map(CommentMapper::toDto)
+                .toList();
+
+        var dto = ItemMapper.toDetailsDto(item, comments);
 
         if (item.getOwner().getId().equals(userId)) {
-            fillLastNext(dto, itemId);
+            LocalDateTime now = LocalDateTime.now();
+            List<Booking> bookings = bookingRepository.findByItem_IdAndStatus(itemId, Booking.BookingStatus.APPROVED);
+            fillLastNext(dto, bookings, now);
         }
 
         return dto;
@@ -97,24 +95,46 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         List<Item> items = itemRepository.findByOwner_Id(userId);
+        if (items.isEmpty()) {
+            return List.of();
+        }
 
-        return items.stream().map(item -> {
-            ItemOwnerDto dto = ItemOwnerDto.builder()
-                    .id(item.getId())
-                    .name(item.getName())
-                    .description(item.getDescription())
-                    .available(item.getAvailable())
-                    .comments(getComments(item.getId()))
-                    .build();
+        List<Long> itemIds = items.stream().map(Item::getId).toList();
 
-            fillLastNext(dto, item.getId());
-            return dto;
-        }).toList();
+        Map<Long, List<CommentDto>> commentsByItemId = commentRepository.findByItem_IdIn(itemIds, COMMENTS_SORT)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        c -> c.getItem().getId(),
+                        Collectors.mapping(CommentMapper::toDto, Collectors.toList())
+                ));
+
+        Map<Long, List<Booking>> bookingsByItemId = bookingRepository
+                .findByItem_IdInAndStatus(itemIds, Booking.BookingStatus.APPROVED)
+                .stream()
+                .collect(Collectors.groupingBy(b -> b.getItem().getId()));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<ItemOwnerDto> result = new ArrayList<>(items.size());
+        for (Item item : items) {
+            List<CommentDto> comments = commentsByItemId.getOrDefault(item.getId(), List.of());
+            ItemOwnerDto dto = ItemMapper.toOwnerDto(item, comments);
+
+            List<Booking> bookings = bookingsByItemId.getOrDefault(item.getId(), List.of());
+            fillLastNext(dto, bookings, now);
+
+            result.add(dto);
+        }
+
+        return result;
     }
 
     @Override
     public List<ItemDto> search(String text) {
-        if (text == null || text.isBlank()) return List.of();
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+
         return itemRepository.search(text).stream()
                 .map(ItemMapper::toItemDto)
                 .toList();
@@ -136,71 +156,48 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("User has not completed a booking for this item");
         }
 
-        Comment comment = Comment.builder()
-                .text(dto.getText())
-                .item(item)
-                .author(author)
-                .created(LocalDateTime.now())
-                .build();
-
+        var comment = CommentMapper.toComment(dto, item, author);
         comment = commentRepository.save(comment);
 
-        return CommentDto.builder()
-                .id(comment.getId())
-                .text(comment.getText())
-                .authorName(comment.getAuthor().getName())
-                .created(comment.getCreated())
-                .build();
+        return CommentMapper.toDto(comment);
     }
 
-    private List<CommentDto> getComments(Long itemId) {
-        return commentRepository.findByItem_Id(itemId, Sort.by(Sort.Direction.DESC, "created"))
-                .stream()
-                .map(c -> CommentDto.builder()
-                        .id(c.getId())
-                        .text(c.getText())
-                        .authorName(c.getAuthor().getName())
-                        .created(c.getCreated())
-                        .build())
-                .toList();
-    }
-
-    private void fillLastNext(ItemOwnerDto dto, Long itemId) {
-        fillLastNextInternal(itemId, (last, next) -> {
+    private void fillLastNext(ItemOwnerDto dto, List<Booking> bookings, LocalDateTime now) {
+        fillLastNextInternal(bookings, now, (last, next) -> {
             dto.setLastBooking(last);
             dto.setNextBooking(next);
         });
     }
 
-    private void fillLastNext(ItemDetailsDto dto, Long itemId) {
-        fillLastNextInternal(itemId, (last, next) -> {
+    private void fillLastNext(ItemDetailsDto dto, List<Booking> bookings, LocalDateTime now) {
+        fillLastNextInternal(bookings, now, (last, next) -> {
             dto.setLastBooking(last);
             dto.setNextBooking(next);
         });
     }
 
-    private void fillLastNextInternal(Long itemId, LastNextSetter setter) {
-        LocalDateTime now = LocalDateTime.now();
-        List<Booking> bookings = bookingRepository.findByItem_IdAndStatus(itemId, Booking.BookingStatus.APPROVED);
+    private void fillLastNextInternal(List<Booking> bookings,
+                                      LocalDateTime now,
+                                      BiConsumer<BookingShortDto, BookingShortDto> setter) {
 
         Booking last = bookings.stream()
-                .filter(b -> !b.getStart().isAfter(now))
-                .max(Comparator.comparing(Booking::getStart))
+                .filter(b -> !b.getEnd().isAfter(now)) // end <= now
+                .max(Comparator.comparing(Booking::getEnd))
                 .orElse(null);
 
         Booking next = bookings.stream()
-                .filter(b -> b.getStart().isAfter(now))
+                .filter(b -> b.getStart().isAfter(now)) // start > now
                 .min(Comparator.comparing(Booking::getStart))
                 .orElse(null);
 
-        BookingShortDto lastDto = (last == null) ? null : new BookingShortDto(last.getId(), last.getBooker().getId());
-        BookingShortDto nextDto = (next == null) ? null : new BookingShortDto(next.getId(), next.getBooker().getId());
+        BookingShortDto lastDto = (last == null)
+                ? null
+                : new BookingShortDto(last.getId(), last.getBooker().getId());
 
-        setter.set(lastDto, nextDto);
-    }
+        BookingShortDto nextDto = (next == null)
+                ? null
+                : new BookingShortDto(next.getId(), next.getBooker().getId());
 
-    @FunctionalInterface
-    private interface LastNextSetter {
-        void set(BookingShortDto last, BookingShortDto next);
+        setter.accept(lastDto, nextDto);
     }
 }
