@@ -23,6 +23,7 @@ public class UserController {
         return ResponseEntity.ok(service.create(userDto));
     }
 
+
     @PatchMapping("/{userId}")
     public ResponseEntity<UserDto> update(@PathVariable Long userId, @RequestBody UserDto userDto) {
         return ResponseEntity.ok(service.update(userId, userDto));

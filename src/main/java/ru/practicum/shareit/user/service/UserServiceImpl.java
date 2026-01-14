@@ -1,26 +1,27 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.repository.InMemoryUserRepository;
-import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.dto.UserDto;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EmailAlreadyExistsException;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private final InMemoryUserRepository repository;
 
-    public UserServiceImpl(InMemoryUserRepository repository) {
-        this.repository = repository;
-    }
+    private final UserRepository repository;
 
     @Override
+    @Transactional
     public UserDto create(UserDto userDto) {
-        repository.findByEmail(userDto.getEmail()).ifPresent(checkUser -> {
+        repository.findByEmailIgnoreCase(userDto.getEmail()).ifPresent(user -> {
             throw new EmailAlreadyExistsException("Email already exists: " + userDto.getEmail());
         });
 
@@ -30,20 +31,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto update(Long userId, UserDto userDto) {
         var user = repository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         if (userDto.getEmail() != null && !userDto.getEmail().equalsIgnoreCase(user.getEmail())) {
-            repository.findByEmail(userDto.getEmail()).ifPresent(checkUser -> {
+            repository.findByEmailIgnoreCase(userDto.getEmail()).ifPresent(userMail -> {
                 throw new EmailAlreadyExistsException("Email already exists: " + userDto.getEmail());
             });
             user.setEmail(userDto.getEmail());
         }
+        if (userDto.getName() != null) {
+            user.setName(userDto.getName());
+        }
 
-        if (userDto.getName() != null) user.setName(userDto.getName());
-
-        repository.save(user);
+        user = repository.save(user);
         return UserMapper.toUserDto(user);
     }
 
@@ -58,11 +61,12 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAll() {
         return repository.findAll().stream()
                 .map(UserMapper::toUserDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
+    @Transactional
     public void delete(Long userId) {
-        repository.delete(userId);
+        repository.deleteById(userId);
     }
 }
