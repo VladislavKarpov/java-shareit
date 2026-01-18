@@ -18,11 +18,17 @@ public class ErrorHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+    public Map<String, Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getFieldErrors()
-                .forEach(fe -> errors.putIfAbsent(fe.getField(), fe.getDefaultMessage()));
-        return errors;
+                .forEach(fe -> fieldErrors.putIfAbsent(fe.getField(), fe.getDefaultMessage()));
+
+        String summary = fieldErrors.values().stream().findFirst().orElse("Validation error");
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("error", summary);
+        result.putAll(fieldErrors);
+        return result;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
