@@ -14,12 +14,20 @@ public class ErrorHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleBodyValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+    public Map<String, Object> handleBodyValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new HashMap<>();
         for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(fe.getField(), fe.getDefaultMessage());
+            fieldErrors.putIfAbsent(fe.getField(), fe.getDefaultMessage());
         }
-        return errors;
+
+        String summary = fieldErrors.values().stream()
+                .findFirst()
+                .orElse("Validation error");
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("error", summary);
+        result.putAll(fieldErrors);
+        return result;
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
