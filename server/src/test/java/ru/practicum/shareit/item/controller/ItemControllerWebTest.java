@@ -18,14 +18,17 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = ItemController.class)
 @Import(ErrorHandler.class)
+@WebMvcTest(controllers = ItemController.class)
 class ItemControllerWebTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ObjectMapper mapper;
+    @Autowired
+    MockMvc mvc;
+    @Autowired
+    ObjectMapper mapper;
 
-    @MockBean ItemService service;
+    @MockBean
+    ItemService service;
 
     private static final String HEADER_USER = ItemController.HEADER_USER;
 

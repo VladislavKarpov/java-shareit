@@ -18,10 +18,14 @@ import static org.assertj.core.api.Assertions.*;
 
 class ItemServiceImplIT extends IntegrationTestBase {
 
-    @Autowired ItemService itemService;
-    @Autowired UserService userService;
-    @Autowired BookingService bookingService;
-    @Autowired BookingRepository bookingRepository;
+    @Autowired
+    ItemService itemService;
+    @Autowired
+    UserService userService;
+    @Autowired
+    BookingService bookingService;
+    @Autowired
+    BookingRepository bookingRepository;
 
     @Test
     void addComment_allowedOnlyAfterFinishedApprovedBooking() {
@@ -34,12 +38,10 @@ class ItemServiceImplIT extends IntegrationTestBase {
         CommentCreateDto comment = new CommentCreateDto();
         comment.setText("nice!");
 
-        // без завершённого APPROVED — нельзя
         assertThatThrownBy(() -> itemService.addComment(booker.getId(), item.getId(), comment))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("has not completed");
 
-        // 1) создаём бронь в будущем
         LocalDateTime base = LocalDateTime.now().plusDays(1);
         BookingCreateDto booking = new BookingCreateDto();
         booking.setItemId(item.getId());
@@ -48,10 +50,8 @@ class ItemServiceImplIT extends IntegrationTestBase {
 
         var created = bookingService.create(booker.getId(), booking);
 
-        // 2) approve пока start ещё в будущем (иначе approve запрещён)
         bookingService.approve(owner.getId(), created.getId(), true);
 
-        // 3) делаем бронь "завершённой" для проверки addComment
         var entity = bookingRepository.findById(created.getId()).orElseThrow();
         entity.setStart(LocalDateTime.now().minusDays(3));
         entity.setEnd(LocalDateTime.now().minusDays(2));

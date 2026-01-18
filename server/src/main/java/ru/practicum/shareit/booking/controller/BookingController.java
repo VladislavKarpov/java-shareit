@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -19,7 +20,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    @ResponseStatus(org.springframework.http.HttpStatus.CREATED) // ✅ 201
+    @ResponseStatus(HttpStatus.CREATED)
     public BookingDto create(@RequestHeader(HEADER_USER) Long userId,
                              @Valid @RequestBody BookingCreateDto dto) {
         return bookingService.create(userId, dto);

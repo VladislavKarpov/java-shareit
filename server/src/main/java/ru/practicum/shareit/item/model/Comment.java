@@ -6,12 +6,12 @@ import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "comments")
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "comments")
 public class Comment {
 
     @Id

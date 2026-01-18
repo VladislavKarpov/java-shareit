@@ -22,9 +22,12 @@ import static org.assertj.core.api.Assertions.*;
 
 class BookingServiceImplIT extends IntegrationTestBase {
 
-    @Autowired BookingService bookingService;
-    @Autowired UserService userService;
-    @Autowired ItemService itemService;
+    @Autowired
+    BookingService bookingService;
+    @Autowired
+    UserService userService;
+    @Autowired
+    ItemService itemService;
 
     @Test
     void create_persistsWaitingBooking_andReturnsDtoWithItemAndBooker() {
@@ -206,6 +209,6 @@ class BookingServiceImplIT extends IntegrationTestBase {
         assertThat(onlyRejected.get(0).getStatus()).isEqualTo(Booking.BookingStatus.REJECTED);
 
         List<BookingDto> onlyWaiting = bookingService.getUserBookings(booker.getId(), BookingState.WAITING);
-        assertThat(onlyWaiting).isEmpty(); // WAITING уже нет, он REJECTED
+        assertThat(onlyWaiting).isEmpty();
     }
 }

@@ -13,7 +13,8 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 @JsonTest
 class BookingCreateDtoJsonTest {
 
-    @Autowired JacksonTester<BookingCreateDto> json;
+    @Autowired
+    JacksonTester<BookingCreateDto> json;
 
     @Test
     void serialize_containsItemIdStartEnd() throws Exception {

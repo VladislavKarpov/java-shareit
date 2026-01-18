@@ -19,9 +19,9 @@ public class ItemRequestController {
     private final ItemRequestService service;
 
     @PostMapping
-    public ResponseEntity<ItemRequestDto> create(@RequestHeader(HEADER_USER) Long userId,
-                                                 @Valid @RequestBody ItemRequestCreateDto dto) {
-        return ResponseEntity.ok(service.create(userId, dto));
+    public ItemRequestDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @Valid @RequestBody ItemRequestCreateDto dto) {
+        return service.create(userId, dto);
     }
 
     @GetMapping

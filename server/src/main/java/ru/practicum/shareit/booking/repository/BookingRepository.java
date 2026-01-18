@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -43,9 +42,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     boolean existsByBooker_IdAndItem_IdAndEndIsBeforeAndStatus(
             Long bookerId, Long itemId, LocalDateTime time, Booking.BookingStatus status);
 
-    List<Booking> findByBooker_Id(Long bookerId, Sort sort);
-
-    List<Booking> findByItem_Owner_Id(Long ownerId, Sort sort);
 
     @Query("""
             select count(b) > 0

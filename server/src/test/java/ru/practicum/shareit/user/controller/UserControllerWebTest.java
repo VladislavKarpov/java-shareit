@@ -24,10 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(ErrorHandler.class)
 class UserControllerWebTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ObjectMapper mapper;
+    @Autowired
+    MockMvc mvc;
+    @Autowired
+    ObjectMapper mapper;
 
-    @MockBean UserService userService;
+    @MockBean
+    UserService userService;
 
     @Test
     void create_ok() throws Exception {
@@ -47,7 +50,6 @@ class UserControllerWebTest {
 
     @Test
     void create_validation_returns400_fieldMap() throws Exception {
-        // имя пустое + email невалидный
         UserDto req = new UserDto(null, "", "bad");
 
         mvc.perform(post("/users")

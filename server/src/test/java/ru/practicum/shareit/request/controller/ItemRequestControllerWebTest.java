@@ -20,14 +20,17 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = ItemRequestController.class)
 @Import(ErrorHandler.class)
+@WebMvcTest(controllers = ItemRequestController.class)
 class ItemRequestControllerWebTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ObjectMapper mapper;
+    @Autowired
+    MockMvc mvc;
+    @Autowired
+    ObjectMapper mapper;
 
-    @MockBean ItemRequestService service;
+    @MockBean
+    ItemRequestService service;
 
     private static final String HEADER_USER = ItemRequestController.HEADER_USER;
 
@@ -58,7 +61,7 @@ class ItemRequestControllerWebTest {
 
     @Test
     void create_validation_returns400_fieldMap() throws Exception {
-        ItemRequestCreateDto req = new ItemRequestCreateDto(); // description null => @NotBlank
+        ItemRequestCreateDto req = new ItemRequestCreateDto();
 
         mvc.perform(post("/requests")
                         .header(HEADER_USER, 10L)

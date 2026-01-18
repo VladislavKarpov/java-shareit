@@ -20,16 +20,16 @@ public class ItemController {
     private final ItemService service;
 
     @PostMapping
-    public ResponseEntity<ItemDto> create(@RequestHeader(HEADER_USER) Long userId,
-                                          @Valid @RequestBody ItemDto itemDto) {
-        return ResponseEntity.ok(service.create(userId, itemDto));
+    public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
+                          @Valid @RequestBody ItemDto dto) {
+        return service.create(userId, dto);
     }
 
     @PostMapping("/{itemId}/comment")
-    public ResponseEntity<CommentDto> addComment(@RequestHeader(HEADER_USER) Long userId,
-                                                 @PathVariable Long itemId,
-                                                 @Valid @RequestBody CommentCreateDto dto) {
-        return ResponseEntity.ok(service.addComment(userId, itemId, dto));
+    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @PathVariable Long itemId,
+                                 @Valid @RequestBody CommentCreateDto dto) {
+        return service.addComment(userId, itemId, dto);
     }
 
     @PatchMapping("/{itemId}")

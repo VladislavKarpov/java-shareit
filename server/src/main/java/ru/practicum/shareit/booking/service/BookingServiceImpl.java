@@ -147,8 +147,10 @@ public class BookingServiceImpl implements BookingService {
             case CURRENT -> bookingRepository.findByItem_Owner_IdAndStartIsBeforeAndEndIsAfter(ownerId, now, now, page);
             case PAST -> bookingRepository.findByItem_Owner_IdAndEndIsBefore(ownerId, now, page);
             case FUTURE -> bookingRepository.findByItem_Owner_IdAndStartIsAfter(ownerId, now, page);
-            case WAITING -> bookingRepository.findByItem_Owner_IdAndStatus(ownerId, Booking.BookingStatus.WAITING, page);
-            case REJECTED -> bookingRepository.findByItem_Owner_IdAndStatus(ownerId, Booking.BookingStatus.REJECTED, page);
+            case WAITING ->
+                    bookingRepository.findByItem_Owner_IdAndStatus(ownerId, Booking.BookingStatus.WAITING, page);
+            case REJECTED ->
+                    bookingRepository.findByItem_Owner_IdAndStatus(ownerId, Booking.BookingStatus.REJECTED, page);
         };
 
         return bookingsPage.getContent().stream().map(BookingMapper::toDto).toList();

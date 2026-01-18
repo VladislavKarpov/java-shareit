@@ -5,12 +5,12 @@ import lombok.*;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
-@Entity
-@Table(name = "items")
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "items")
 public class Item {
 
     @Id

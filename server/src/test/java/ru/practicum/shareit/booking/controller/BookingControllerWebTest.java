@@ -26,8 +26,8 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = BookingController.class)
 @Import(ErrorHandler.class)
+@WebMvcTest(controllers = BookingController.class)
 class BookingControllerWebTest {
 
     @Autowired

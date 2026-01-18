@@ -18,8 +18,8 @@ public class UserController {
     private final UserService service;
 
     @PostMapping
-    public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto userDto) {
-        return ResponseEntity.ok(service.create(userDto));
+    public UserDto create(@Valid @RequestBody UserDto dto) {
+        return service.create(dto);
     }
 
     @PatchMapping("/{userId}")
