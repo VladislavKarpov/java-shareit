@@ -1,6 +1,5 @@
 FROM eclipse-temurin:21-jre-jammy
-WORKDIR /app
-ARG JAR_FILE=target/shareit-server-*.jar
+VOLUME /tmp
+ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
-EXPOSE 9090
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app.jar"]
