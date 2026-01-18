@@ -76,10 +76,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Booking status already decided");
         }
 
-        if (!booking.getStart().isAfter(LocalDateTime.now())) {
-            throw new ValidationException("Cannot approve/reject booking that already started");
-        }
-
         booking.setStatus(approved ? Booking.BookingStatus.APPROVED : Booking.BookingStatus.REJECTED);
         booking = bookingRepository.save(booking);
 
