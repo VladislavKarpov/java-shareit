@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
-
 import java.util.List;
 
 @Validated
@@ -22,7 +21,6 @@ public class UserController {
     public ResponseEntity<UserDto> create(@Valid @RequestBody UserDto userDto) {
         return ResponseEntity.ok(service.create(userDto));
     }
-
 
     @PatchMapping("/{userId}")
     public ResponseEntity<UserDto> update(@PathVariable Long userId, @RequestBody UserDto userDto) {

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
-
 import java.util.List;
 
 @Validated
@@ -16,8 +15,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/items")
 public class ItemController {
-    private final ItemService service;
+
     public static final String HEADER_USER = "X-Sharer-User-Id";
+    private final ItemService service;
 
     @PostMapping
     public ResponseEntity<ItemDto> create(@RequestHeader(HEADER_USER) Long userId,
@@ -32,13 +32,10 @@ public class ItemController {
         return ResponseEntity.ok(service.addComment(userId, itemId, dto));
     }
 
-
     @PatchMapping("/{itemId}")
-    public ResponseEntity<ItemDto> update(
-            @RequestHeader(HEADER_USER) Long userId,
-            @PathVariable Long itemId,
-            @RequestBody ItemDto itemDto
-    ) {
+    public ResponseEntity<ItemDto> update(@RequestHeader(HEADER_USER) Long userId,
+                                          @PathVariable Long itemId,
+                                          @RequestBody ItemDto itemDto) {
         return ResponseEntity.ok(service.update(userId, itemId, itemDto));
     }
 
@@ -57,5 +54,4 @@ public class ItemController {
     public ResponseEntity<List<ItemDto>> search(@RequestParam String text) {
         return ResponseEntity.ok(service.search(text));
     }
-
 }

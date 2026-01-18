@@ -37,7 +37,6 @@ public class ItemClient extends BaseClient {
     }
 
     public ResponseEntity<String> addComment(long userId, long itemId, Object body) {
-        // ✅ теперь BaseClient умеет post с params — ничего не ломаем
         return post("/{itemId}/comment", userId, body, Map.of("itemId", itemId));
     }
 }

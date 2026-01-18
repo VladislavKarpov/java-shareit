@@ -16,10 +16,10 @@ import java.util.List;
 public class BookingController {
 
     public static final String HEADER_USER = "X-Sharer-User-Id";
-
     private final BookingService bookingService;
 
     @PostMapping
+    @ResponseStatus(org.springframework.http.HttpStatus.CREATED) // ✅ 201
     public BookingDto create(@RequestHeader(HEADER_USER) Long userId,
                              @Valid @RequestBody BookingCreateDto dto) {
         return bookingService.create(userId, dto);
@@ -40,13 +40,17 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDto> getUserBookings(@RequestHeader(HEADER_USER) Long userId,
-                                            @RequestParam(required = false, defaultValue = "ALL") String state) {
-        return bookingService.getUserBookings(userId, BookingState.from(state));
+                                            @RequestParam(defaultValue = "ALL") String state,
+                                            @RequestParam(defaultValue = "0") int from,
+                                            @RequestParam(defaultValue = "10") int size) {
+        return bookingService.getUserBookings(userId, BookingState.from(state), from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingDto> getOwnerBookings(@RequestHeader(HEADER_USER) Long userId,
-                                             @RequestParam(required = false, defaultValue = "ALL") String state) {
-        return bookingService.getOwnerBookings(userId, BookingState.from(state));
+                                             @RequestParam(defaultValue = "ALL") String state,
+                                             @RequestParam(defaultValue = "0") int from,
+                                             @RequestParam(defaultValue = "10") int size) {
+        return bookingService.getOwnerBookings(userId, BookingState.from(state), from, size);
     }
 }

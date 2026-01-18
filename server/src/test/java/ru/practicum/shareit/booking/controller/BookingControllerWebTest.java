@@ -30,10 +30,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(ErrorHandler.class)
 class BookingControllerWebTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ObjectMapper mapper;
+    @Autowired
+    MockMvc mvc;
+    @Autowired
+    ObjectMapper mapper;
 
-    @MockBean BookingService bookingService;
+    @MockBean
+    BookingService bookingService;
 
     private static final String HEADER_USER = BookingController.HEADER_USER;
 
@@ -55,7 +58,7 @@ class BookingControllerWebTest {
                         .header(HEADER_USER, 2L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated()) // ✅ было isOk()
                 .andExpect(jsonPath("$.id").value(10L))
                 .andExpect(jsonPath("$.status").value("WAITING"));
 
@@ -67,8 +70,7 @@ class BookingControllerWebTest {
 
     @Test
     void create_validationError_returns400_withFieldMap() throws Exception {
-        // itemId null + start/end null => @NotNull сработает и попадет в MethodArgumentNotValidException
-        BookingCreateDto req = new BookingCreateDto();
+        BookingCreateDto req = new BookingCreateDto(); // itemId/start/end null
 
         mvc.perform(post("/bookings")
                         .header(HEADER_USER, 2L)
@@ -122,13 +124,28 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getUserBookings_ok_defaultStateALL() throws Exception {
-        when(bookingService.getUserBookings(7L, BookingState.ALL)).thenReturn(List.of());
+    void getUserBookings_ok_defaultStateALL_defaultPaging() throws Exception {
+        when(bookingService.getUserBookings(7L, BookingState.ALL, 0, 10)).thenReturn(List.of());
 
         mvc.perform(get("/bookings").header(HEADER_USER, 7L))
                 .andExpect(status().isOk());
 
-        verify(bookingService).getUserBookings(7L, BookingState.ALL);
+        verify(bookingService).getUserBookings(7L, BookingState.ALL, 0, 10);
+        verifyNoMoreInteractions(bookingService);
+    }
+
+    @Test
+    void getUserBookings_ok_customPaging() throws Exception {
+        when(bookingService.getUserBookings(7L, BookingState.FUTURE, 20, 5)).thenReturn(List.of());
+
+        mvc.perform(get("/bookings")
+                        .header(HEADER_USER, 7L)
+                        .param("state", "FUTURE")
+                        .param("from", "20")
+                        .param("size", "5"))
+                .andExpect(status().isOk());
+
+        verify(bookingService).getUserBookings(7L, BookingState.FUTURE, 20, 5);
         verifyNoMoreInteractions(bookingService);
     }
 
@@ -144,21 +161,21 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getOwnerBookings_ok() throws Exception {
-        when(bookingService.getOwnerBookings(7L, BookingState.WAITING)).thenReturn(List.of());
+    void getOwnerBookings_ok_defaultPaging() throws Exception {
+        when(bookingService.getOwnerBookings(7L, BookingState.WAITING, 0, 10)).thenReturn(List.of());
 
         mvc.perform(get("/bookings/owner")
                         .header(HEADER_USER, 7L)
                         .param("state", "WAITING"))
                 .andExpect(status().isOk());
 
-        verify(bookingService).getOwnerBookings(7L, BookingState.WAITING);
+        verify(bookingService).getOwnerBookings(7L, BookingState.WAITING, 0, 10);
         verifyNoMoreInteractions(bookingService);
     }
 
     @Test
     void getOwnerBookings_serviceValidation_returns400() throws Exception {
-        when(bookingService.getOwnerBookings(7L, BookingState.ALL))
+        when(bookingService.getOwnerBookings(7L, BookingState.ALL, 0, 10))
                 .thenThrow(new ValidationException("bad"));
 
         mvc.perform(get("/bookings/owner")
@@ -167,7 +184,7 @@ class BookingControllerWebTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("bad"));
 
-        verify(bookingService).getOwnerBookings(7L, BookingState.ALL);
+        verify(bookingService).getOwnerBookings(7L, BookingState.ALL, 0, 10);
         verifyNoMoreInteractions(bookingService);
     }
 }
