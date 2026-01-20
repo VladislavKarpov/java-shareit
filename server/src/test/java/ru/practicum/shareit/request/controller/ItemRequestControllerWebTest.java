@@ -22,20 +22,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Import(ErrorHandler.class)
 @WebMvcTest(controllers = ItemRequestController.class)
-class ItemRequestControllerWebTest {
+public class ItemRequestControllerWebTest {
 
     @Autowired
-    MockMvc mvc;
+    private MockMvc mvc;
+
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    ItemRequestService service;
+    private ItemRequestService service;
 
     private static final String HEADER_USER = ItemRequestController.HEADER_USER;
 
     @Test
-    void create_ok() throws Exception {
+    public void create_ok() throws Exception {
         ItemRequestCreateDto req = new ItemRequestCreateDto();
         req.setDescription("need");
 
@@ -60,7 +61,7 @@ class ItemRequestControllerWebTest {
     }
 
     @Test
-    void create_validation_returns400_fieldMap() throws Exception {
+    public void create_validation_returns400_fieldMap() throws Exception {
         ItemRequestCreateDto req = new ItemRequestCreateDto();
 
         mvc.perform(post("/requests")
@@ -74,7 +75,7 @@ class ItemRequestControllerWebTest {
     }
 
     @Test
-    void getOwn_ok() throws Exception {
+    public void getOwn_ok() throws Exception {
         when(service.getOwn(10L)).thenReturn(List.of());
 
         mvc.perform(get("/requests").header(HEADER_USER, 10L))
@@ -85,7 +86,7 @@ class ItemRequestControllerWebTest {
     }
 
     @Test
-    void getAll_ok_withFromSize() throws Exception {
+    public void getAll_ok_withFromSize() throws Exception {
         when(service.getAllOthers(10L, 0, 10)).thenReturn(List.of());
 
         mvc.perform(get("/requests/all")
@@ -99,7 +100,7 @@ class ItemRequestControllerWebTest {
     }
 
     @Test
-    void getById_ok() throws Exception {
+    public void getById_ok() throws Exception {
         when(service.getById(10L, 5L)).thenReturn(ItemRequestDto.builder().id(5L).build());
 
         mvc.perform(get("/requests/5").header(HEADER_USER, 10L))

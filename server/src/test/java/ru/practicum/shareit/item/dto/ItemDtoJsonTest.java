@@ -8,13 +8,13 @@ import org.springframework.boot.test.json.JacksonTester;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
-class ItemDtoJsonTest {
+public class ItemDtoJsonTest {
 
     @Autowired
     private JacksonTester<ItemDto> json;
 
     @Test
-    void serialize_containsAllFields() throws Exception {
+    public void serialize_containsAllFields() throws Exception {
         ItemDto dto = ItemDto.builder()
                 .id(1L)
                 .name("n")
@@ -35,7 +35,7 @@ class ItemDtoJsonTest {
     }
 
     @Test
-    void deserialize_readsFields() throws Exception {
+    public void deserialize_readsFields() throws Exception {
         String content = """
                 {
                   "id": 10,

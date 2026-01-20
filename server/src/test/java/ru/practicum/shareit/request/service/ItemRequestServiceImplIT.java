@@ -9,15 +9,16 @@ import ru.practicum.shareit.user.service.UserService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ItemRequestServiceImplIT extends IntegrationTestBase {
+public class ItemRequestServiceImplIT extends IntegrationTestBase {
 
     @Autowired
-    ItemRequestService requestService;
+    private ItemRequestService requestService;
+
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @Test
-    void getAllOthers_fromAndSize_workAsOffsetPagination() {
+    public void getAllOthers_fromAndSize_workAsOffsetPagination() {
         UserDto u1 = userService.create(new UserDto(null, "u1", "u1@mail.com"));
         UserDto u2 = userService.create(new UserDto(null, "u2", "u2@mail.com"));
 

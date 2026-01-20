@@ -28,20 +28,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Import(ErrorHandler.class)
 @WebMvcTest(controllers = BookingController.class)
-class BookingControllerWebTest {
+public class BookingControllerWebTest {
 
     @Autowired
-    MockMvc mvc;
+    private MockMvc mvc;
+
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    BookingService bookingService;
+    private BookingService bookingService;
 
     private static final String HEADER_USER = BookingController.HEADER_USER;
 
     @Test
-    void create_ok() throws Exception {
+    public void create_ok() throws Exception {
         BookingCreateDto req = new BookingCreateDto();
         req.setItemId(1L);
         req.setStart(LocalDateTime.now().plusDays(1));
@@ -58,7 +59,7 @@ class BookingControllerWebTest {
                         .header(HEADER_USER, 2L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isCreated()) // ✅ было isOk()
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10L))
                 .andExpect(jsonPath("$.status").value("WAITING"));
 
@@ -69,8 +70,8 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void create_validationError_returns400_withFieldMap() throws Exception {
-        BookingCreateDto req = new BookingCreateDto(); // itemId/start/end null
+    public void create_validationError_returns400_withFieldMap() throws Exception {
+        BookingCreateDto req = new BookingCreateDto();
 
         mvc.perform(post("/bookings")
                         .header(HEADER_USER, 2L)
@@ -85,7 +86,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void approve_ok() throws Exception {
+    public void approve_ok() throws Exception {
         when(bookingService.approve(5L, 10L, true))
                 .thenReturn(BookingDto.builder().id(10L).status(Booking.BookingStatus.APPROVED).build());
 
@@ -100,7 +101,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getById_ok() throws Exception {
+    public void getById_ok() throws Exception {
         when(bookingService.getById(7L, 10L)).thenReturn(BookingDto.builder().id(10L).build());
 
         mvc.perform(get("/bookings/10").header(HEADER_USER, 7L))
@@ -112,7 +113,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getById_notFound_returns404() throws Exception {
+    public void getById_notFound_returns404() throws Exception {
         when(bookingService.getById(7L, 10L)).thenThrow(new NotFoundException("Booking not found"));
 
         mvc.perform(get("/bookings/10").header(HEADER_USER, 7L))
@@ -124,7 +125,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getUserBookings_ok_defaultStateALL_defaultPaging() throws Exception {
+    public void getUserBookings_ok_defaultStateALL_defaultPaging() throws Exception {
         when(bookingService.getUserBookings(7L, BookingState.ALL, 0, 10)).thenReturn(List.of());
 
         mvc.perform(get("/bookings").header(HEADER_USER, 7L))
@@ -135,7 +136,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getUserBookings_ok_customPaging() throws Exception {
+    public void getUserBookings_ok_customPaging() throws Exception {
         when(bookingService.getUserBookings(7L, BookingState.FUTURE, 20, 5)).thenReturn(List.of());
 
         mvc.perform(get("/bookings")
@@ -150,7 +151,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getUserBookings_unknownState_returns400() throws Exception {
+    public void getUserBookings_unknownState_returns400() throws Exception {
         mvc.perform(get("/bookings")
                         .header(HEADER_USER, 7L)
                         .param("state", "WTF"))
@@ -161,7 +162,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getOwnerBookings_ok_defaultPaging() throws Exception {
+    public void getOwnerBookings_ok_defaultPaging() throws Exception {
         when(bookingService.getOwnerBookings(7L, BookingState.WAITING, 0, 10)).thenReturn(List.of());
 
         mvc.perform(get("/bookings/owner")
@@ -174,7 +175,7 @@ class BookingControllerWebTest {
     }
 
     @Test
-    void getOwnerBookings_serviceValidation_returns400() throws Exception {
+    public void getOwnerBookings_serviceValidation_returns400() throws Exception {
         when(bookingService.getOwnerBookings(7L, BookingState.ALL, 0, 10))
                 .thenThrow(new ValidationException("bad"));
 

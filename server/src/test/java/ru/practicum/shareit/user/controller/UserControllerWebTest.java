@@ -22,18 +22,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = UserController.class)
 @Import(ErrorHandler.class)
-class UserControllerWebTest {
+public class UserControllerWebTest {
 
     @Autowired
-    MockMvc mvc;
+    private MockMvc mvc;
+
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    UserService userService;
+    private UserService userService;
 
     @Test
-    void create_ok() throws Exception {
+    public void create_ok() throws Exception {
         UserDto req = new UserDto(null, "u", "u@mail.com");
         UserDto resp = new UserDto(1L, "u", "u@mail.com");
         when(userService.create(any(UserDto.class))).thenReturn(resp);
@@ -49,7 +50,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void create_validation_returns400_fieldMap() throws Exception {
+    public void create_validation_returns400_fieldMap() throws Exception {
         UserDto req = new UserDto(null, "", "bad");
 
         mvc.perform(post("/users")
@@ -63,7 +64,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void create_emailExists_returns409() throws Exception {
+    public void create_emailExists_returns409() throws Exception {
         UserDto req = new UserDto(null, "u", "u@mail.com");
         when(userService.create(any(UserDto.class)))
                 .thenThrow(new EmailAlreadyExistsException("Email already exists: u@mail.com"));
@@ -79,7 +80,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void update_ok() throws Exception {
+    public void update_ok() throws Exception {
         UserDto patch = new UserDto(null, "new", null);
         when(userService.update(eq(1L), any(UserDto.class)))
                 .thenReturn(new UserDto(1L, "new", "u@mail.com"));
@@ -95,7 +96,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void getById_ok() throws Exception {
+    public void getById_ok() throws Exception {
         when(userService.getById(1L)).thenReturn(new UserDto(1L, "u", "u@mail.com"));
 
         mvc.perform(get("/users/1"))
@@ -107,7 +108,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void getById_notFound_returns404() throws Exception {
+    public void getById_notFound_returns404() throws Exception {
         when(userService.getById(1L)).thenThrow(new NotFoundException("User not found: 1"));
 
         mvc.perform(get("/users/1"))
@@ -119,7 +120,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void getAll_ok() throws Exception {
+    public void getAll_ok() throws Exception {
         when(userService.getAll()).thenReturn(List.of(new UserDto(1L, "u", "u@mail.com")));
 
         mvc.perform(get("/users"))
@@ -131,7 +132,7 @@ class UserControllerWebTest {
     }
 
     @Test
-    void delete_noContent() throws Exception {
+    public void delete_noContent() throws Exception {
         mvc.perform(delete("/users/1"))
                 .andExpect(status().isNoContent());
 

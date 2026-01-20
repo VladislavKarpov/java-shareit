@@ -16,19 +16,22 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.*;
 
-class ItemServiceImplIT extends IntegrationTestBase {
+public class ItemServiceImplIT extends IntegrationTestBase {
 
     @Autowired
-    ItemService itemService;
+    private ItemService itemService;
+
     @Autowired
-    UserService userService;
+    private UserService userService;
+
     @Autowired
-    BookingService bookingService;
+    private BookingService bookingService;
+
     @Autowired
-    BookingRepository bookingRepository;
+    private BookingRepository bookingRepository;
 
     @Test
-    void addComment_allowedOnlyAfterFinishedApprovedBooking() {
+    public void addComment_allowedOnlyAfterFinishedApprovedBooking() {
         UserDto owner = userService.create(new UserDto(null, "owner2", "owner2@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker2", "booker2@mail.com"));
 
@@ -49,7 +52,6 @@ class ItemServiceImplIT extends IntegrationTestBase {
         booking.setEnd(base.plusDays(1));
 
         var created = bookingService.create(booker.getId(), booking);
-
         bookingService.approve(owner.getId(), created.getId(), true);
 
         var entity = bookingRepository.findById(created.getId()).orElseThrow();

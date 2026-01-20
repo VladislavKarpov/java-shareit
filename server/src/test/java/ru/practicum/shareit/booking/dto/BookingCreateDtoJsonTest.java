@@ -9,15 +9,14 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-
 @JsonTest
-class BookingCreateDtoJsonTest {
+public class BookingCreateDtoJsonTest {
 
     @Autowired
-    JacksonTester<BookingCreateDto> json;
+    private JacksonTester<BookingCreateDto> json;
 
     @Test
-    void serialize_containsItemIdStartEnd() throws Exception {
+    public void serialize_containsItemIdStartEnd() throws Exception {
         BookingCreateDto dto = new BookingCreateDto();
         dto.setItemId(1L);
         dto.setStart(LocalDateTime.of(2030, 1, 1, 12, 0));

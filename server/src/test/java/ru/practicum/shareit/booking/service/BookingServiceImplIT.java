@@ -20,17 +20,19 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
-class BookingServiceImplIT extends IntegrationTestBase {
+public class BookingServiceImplIT extends IntegrationTestBase {
 
     @Autowired
-    BookingService bookingService;
+    private BookingService bookingService;
+
     @Autowired
-    UserService userService;
+    private UserService userService;
+
     @Autowired
-    ItemService itemService;
+    private ItemService itemService;
 
     @Test
-    void create_persistsWaitingBooking_andReturnsDtoWithItemAndBooker() {
+    public void create_persistsWaitingBooking_andReturnsDtoWithItemAndBooker() {
         UserDto owner = userService.create(new UserDto(null, "owner", "owner@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker", "booker@mail.com"));
 
@@ -53,7 +55,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
     }
 
     @Test
-    void create_throwsIfItemNotAvailable() {
+    public void create_throwsIfItemNotAvailable() {
         UserDto owner = userService.create(new UserDto(null, "owner2", "owner2@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker2", "booker2@mail.com"));
 
@@ -71,7 +73,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
     }
 
     @Test
-    void create_throwsIfOwnerBooksOwnItem() {
+    public void create_throwsIfOwnerBooksOwnItem() {
         UserDto owner = userService.create(new UserDto(null, "owner3", "owner3@mail.com"));
         ItemDto item = itemService.create(owner.getId(),
                 new ItemDto(null, "item3", "desc3", true, null, null));
@@ -87,7 +89,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
     }
 
     @Test
-    void create_throwsIfEndNotAfterStart() {
+    public void create_throwsIfEndNotAfterStart() {
         UserDto owner = userService.create(new UserDto(null, "owner4", "owner4@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker4", "booker4@mail.com"));
         ItemDto item = itemService.create(owner.getId(),
@@ -98,7 +100,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
         BookingCreateDto dto = new BookingCreateDto();
         dto.setItemId(item.getId());
         dto.setStart(start);
-        dto.setEnd(start); // строго равно -> end.isAfter(start) == false
+        dto.setEnd(start);
 
         assertThatThrownBy(() -> bookingService.create(booker.getId(), dto))
                 .isInstanceOf(ValidationException.class)
@@ -106,7 +108,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
     }
 
     @Test
-    void create_throwsIfOverlapsWithApprovedBooking() {
+    public void create_throwsIfOverlapsWithApprovedBooking() {
         UserDto owner = userService.create(new UserDto(null, "owner5", "owner5@mail.com"));
         UserDto booker1 = userService.create(new UserDto(null, "booker5a", "booker5a@mail.com"));
         UserDto booker2 = userService.create(new UserDto(null, "booker5b", "booker5b@mail.com"));
@@ -114,7 +116,6 @@ class BookingServiceImplIT extends IntegrationTestBase {
         ItemDto item = itemService.create(owner.getId(),
                 new ItemDto(null, "item5", "desc5", true, null, null));
 
-        // первая бронь -> approve
         BookingCreateDto b1 = new BookingCreateDto();
         b1.setItemId(item.getId());
         b1.setStart(LocalDateTime.now().plusDays(10));
@@ -122,7 +123,6 @@ class BookingServiceImplIT extends IntegrationTestBase {
         BookingDto created1 = bookingService.create(booker1.getId(), b1);
         bookingService.approve(owner.getId(), created1.getId(), true);
 
-        // пересекается по времени
         BookingCreateDto b2 = new BookingCreateDto();
         b2.setItemId(item.getId());
         b2.setStart(LocalDateTime.now().plusDays(11));
@@ -134,7 +134,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
     }
 
     @Test
-    void approve_onlyOwnerCanApprove_andOnlyWaiting_andNotStarted() {
+    public void approve_onlyOwnerCanApprove_andOnlyWaiting_andNotStarted() {
         UserDto owner = userService.create(new UserDto(null, "owner6", "owner6@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker6", "booker6@mail.com"));
         UserDto stranger = userService.create(new UserDto(null, "stranger6", "stranger6@mail.com"));
@@ -148,22 +148,19 @@ class BookingServiceImplIT extends IntegrationTestBase {
         dto.setEnd(LocalDateTime.now().plusDays(2));
         BookingDto created = bookingService.create(booker.getId(), dto);
 
-        // чужой не может
         assertThatThrownBy(() -> bookingService.approve(stranger.getId(), created.getId(), true))
                 .isInstanceOf(ForbiddenException.class);
 
-        // owner может
         BookingDto approved = bookingService.approve(owner.getId(), created.getId(), true);
         assertThat(approved.getStatus()).isEqualTo(Booking.BookingStatus.APPROVED);
 
-        // повторно нельзя
         assertThatThrownBy(() -> bookingService.approve(owner.getId(), created.getId(), true))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("already decided");
     }
 
     @Test
-    void getById_allowsOnlyBookerOrOwner() {
+    public void getById_allowsOnlyBookerOrOwner() {
         UserDto owner = userService.create(new UserDto(null, "owner7", "owner7@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker7", "booker7@mail.com"));
         UserDto other = userService.create(new UserDto(null, "other7", "other7@mail.com"));
@@ -186,7 +183,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
     }
 
     @Test
-    void getUserBookings_stateAll_waiting_rejected_work() {
+    public void getUserBookings_stateAll_waiting_rejected_work() {
         UserDto owner = userService.create(new UserDto(null, "owner8", "owner8@mail.com"));
         UserDto booker = userService.create(new UserDto(null, "booker8", "booker8@mail.com"));
 
@@ -199,7 +196,7 @@ class BookingServiceImplIT extends IntegrationTestBase {
         b1.setEnd(LocalDateTime.now().plusDays(6));
         BookingDto waiting = bookingService.create(booker.getId(), b1);
 
-        BookingDto rejected = bookingService.approve(owner.getId(), waiting.getId(), false);
+        bookingService.approve(owner.getId(), waiting.getId(), false);
 
         List<BookingDto> all = bookingService.getUserBookings(booker.getId(), BookingState.ALL);
         assertThat(all).extracting(BookingDto::getId).contains(waiting.getId());

@@ -10,17 +10,17 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ItemDtoValidationTest {
+public class ItemDtoValidationTest {
 
     private Validator validator;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         validator = Validation.buildDefaultValidatorFactory().getValidator();
     }
 
     @Test
-    void name_blank_isViolation() {
+    public void name_blank_isViolation() {
         ItemDto dto = ItemDto.builder()
                 .name("   ")
                 .description("d")
@@ -34,7 +34,7 @@ class ItemDtoValidationTest {
     }
 
     @Test
-    void available_null_isViolation() {
+    public void available_null_isViolation() {
         ItemDto dto = ItemDto.builder()
                 .name("n")
                 .description("d")

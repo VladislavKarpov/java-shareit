@@ -20,20 +20,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Import(ErrorHandler.class)
 @WebMvcTest(controllers = ItemController.class)
-class ItemControllerWebTest {
+public class ItemControllerWebTest {
 
     @Autowired
-    MockMvc mvc;
+    private MockMvc mvc;
+
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @MockBean
-    ItemService service;
+    private ItemService service;
 
     private static final String HEADER_USER = ItemController.HEADER_USER;
 
     @Test
-    void create_ok() throws Exception {
+    public void create_ok() throws Exception {
         ItemDto req = ItemDto.builder()
                 .name("n")
                 .description("d")
@@ -55,8 +56,7 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void create_validation_returns400_fieldMap() throws Exception {
-        // name blank, description blank, available null
+    public void create_validation_returns400_fieldMap() throws Exception {
         ItemDto req = ItemDto.builder()
                 .name(" ")
                 .description("")
@@ -75,7 +75,7 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void addComment_ok() throws Exception {
+    public void addComment_ok() throws Exception {
         CommentCreateDto req = new CommentCreateDto();
         req.setText("hi");
 
@@ -95,8 +95,8 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void addComment_validation_returns400_fieldMap() throws Exception {
-        CommentCreateDto req = new CommentCreateDto(); // text null -> @NotBlank
+    public void addComment_validation_returns400_fieldMap() throws Exception {
+        CommentCreateDto req = new CommentCreateDto();
 
         mvc.perform(post("/items/10/comment")
                         .header(HEADER_USER, 1L)
@@ -109,7 +109,7 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void update_ok() throws Exception {
+    public void update_ok() throws Exception {
         ItemDto patch = ItemDto.builder().name("new").build();
 
         when(service.update(eq(1L), eq(10L), any(ItemDto.class)))
@@ -127,7 +127,7 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void getById_ok() throws Exception {
+    public void getById_ok() throws Exception {
         when(service.getById(1L, 10L)).thenReturn(ItemDetailsDto.builder().id(10L).name("n").build());
 
         mvc.perform(get("/items/10").header(HEADER_USER, 1L))
@@ -139,7 +139,7 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void getOwnerItems_ok() throws Exception {
+    public void getOwnerItems_ok() throws Exception {
         when(service.getOwnerItems(1L)).thenReturn(List.of());
 
         mvc.perform(get("/items").header(HEADER_USER, 1L))
@@ -150,7 +150,7 @@ class ItemControllerWebTest {
     }
 
     @Test
-    void search_ok() throws Exception {
+    public void search_ok() throws Exception {
         when(service.search("q")).thenReturn(List.of());
 
         mvc.perform(get("/items/search").param("text", "q"))
